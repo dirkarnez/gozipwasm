@@ -5,31 +5,28 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
 
 func main() {
-	err := UnzipSplitFiles("BEYOND.zip")
-	if err != nil {
-		fmt.Println("Error unzipping files:", err)
+	if len(os.Args) == 2 {
+		err := UnzipSplitFiles_Desktop(os.Args[1:2][0])
+		if err != nil {
+			fmt.Println("Error unzipping files:", err)
+		}
+	} else {
+		log.Fatal("please drag a file with extension .zip.001")
 	}
 }
 
-func UnzipSplitFiles(filename string) error {
-	baseFilename := filename[:len(filename)-4] // Remove the ".zip" extension
+func UnzipSplitFiles_Desktop(filename string) error {
+	baseFilename := filename[:len(filename)-8] // Remove the ".zip.001" extension
 	zipFiles, err := filepath.Glob(baseFilename + ".zip.*")
 	if err != nil {
 		return err
 	}
-
-	// Create a new file to write the concatenated content
-	// dstFile, err := os.Create(baseFilename)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer dstFile.Close()
-
 	dstBuffer := new(bytes.Buffer)
 
 	// Concatenate the split files into a single file
@@ -46,6 +43,18 @@ func UnzipSplitFiles(filename string) error {
 		}
 	}
 
+	//zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
+	return UnzipSplitFiles(dstBuffer.Bytes())
+}
+
+func UnzipSplitFiles(byteArray []byte) error {
+	// Create a new file to write the concatenated content
+	// dstFile, err := os.Create(baseFilename)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer dstFile.Close()
+
 	// // Open the concatenated file
 	// zipReader, err := zip.OpenReader(baseFilename)
 	// if err != nil {
@@ -53,7 +62,7 @@ func UnzipSplitFiles(filename string) error {
 	// }
 	// defer zipReader.Close()
 
-	zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
+	zipReader, err := zip.NewReader(bytes.NewReader(byteArray), int64(len(byteArray)))
 	if err != nil {
 		return err
 	}
