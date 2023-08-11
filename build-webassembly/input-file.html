@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>    
+  <script src="wasm_exec.js"></script>
+  <input type="file" id="input" multiple>
+  <script>
+    function convert(uint8ArrayList) {
+      const go = new Go();
+      return WebAssembly
+      .instantiateStreaming(fetch("main.wasm"), go.importObject)
+      .then(result => {
+          go.run(result.instance);
+
+          var midiData = UnzipSplitFilesGo(...uint8ArrayList);
+          if (!midiData || midiData.length == 0) {
+              throw "Fail to convert this file";
+          }
+
+          const a = URL.createObjectURL(new Blob([midiData[0]]));
+          
+          debugger;
+          
+          const link = document.createElement('a');
+          link.href = a;
+          link.download = "123.mp4";
+
+          // Append link to the body
+          document.body.appendChild(link);
+
+          // Dispatch click event on the link
+          // This is necessary as link.click() does not work on the latest firefox
+          link.dispatchEvent(
+            new MouseEvent('click', { 
+              bubbles: true, 
+              cancelable: true, 
+              view: window 
+            })
+          );
+
+          // Remove link from body
+          document.body.removeChild(link);
+
+          return a;
+      });
+    }
+
+    function download(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    const inputElement = document.getElementById("input");
+    inputElement.addEventListener("change", function () {
+      const fileList = this.files;
+
+      var promiseList = [];
+      for (const file of fileList) {
+        promiseList.push(((f) => new Promise((res) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            // convert(new Uint8Array(event.target.result))
+            // .then(converted => download(converted, file.name.substr(0, file.name.lastIndexOf(".")) + ".mid"))
+            // .catch(err => alert(err));
+            res(new Uint8Array(event.target.result));
+          }
+          reader.readAsArrayBuffer(f)
+        }))(file));
+      }
+
+      Promise.all(promiseList).then(uint8ArrayList => {
+        convert(uint8ArrayList);
+      })
+    }, false);
+
+  </script>
+</body>
+
+</html>

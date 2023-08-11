@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/dirkarnez/gozipwasm/unzip"
 )
 
 func main() {
@@ -44,31 +46,13 @@ func UnzipSplitFiles_Desktop(filename string) error {
 	}
 
 	//zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
-	return UnzipSplitFiles(dstBuffer.Bytes())
-}
-
-func UnzipSplitFiles(byteArray []byte) error {
-	// Create a new file to write the concatenated content
-	// dstFile, err := os.Create(baseFilename)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer dstFile.Close()
-
-	// // Open the concatenated file
-	// zipReader, err := zip.OpenReader(baseFilename)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer zipReader.Close()
-
-	zipReader, err := zip.NewReader(bytes.NewReader(byteArray), int64(len(byteArray)))
+	files, err := unzip.UnzipSplitFiles(dstBuffer.Bytes())
 	if err != nil {
 		return err
 	}
 
 	// Extract the contents of the ZIP archive
-	for _, file := range zipReader.File {
+	for _, file := range files {
 		err := extractFile(file)
 		if err != nil {
 			return err
