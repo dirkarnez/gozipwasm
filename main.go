@@ -1,55 +1,89 @@
 package main
 
 import (
-    "archive/zip"
-    "fmt"
-    "io"
-    "os"
-    "path/filepath"
-    "strings"
+	"archive/zip"
+	"bytes"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 func main() {
-    dst := "output"
-    archive, err := zip.OpenReader("archive.zip")
-    if err != nil {
-        panic(err)
-    }
-    defer archive.Close()
+	err := UnzipSplitFiles("BEYOND.zip")
+	if err != nil {
+		fmt.Println("Error unzipping files:", err)
+	}
+}
 
-    for _, f := range archive.File {
-        filePath := filepath.Join(dst, f.Name)
-        fmt.Println("unzipping file ", filePath)
+func UnzipSplitFiles(filename string) error {
+	baseFilename := filename[:len(filename)-4] // Remove the ".zip" extension
+	zipFiles, err := filepath.Glob(baseFilename + ".zip.*")
+	if err != nil {
+		return err
+	}
 
-        if !strings.HasPrefix(filePath, filepath.Clean(dst)+string(os.PathSeparator)) {
-            fmt.Println("invalid file path")
-            return
-        }
-        if f.FileInfo().IsDir() {
-            fmt.Println("creating directory...")
-            os.MkdirAll(filePath, os.ModePerm)
-            continue
-        }
+	// Create a new file to write the concatenated content
+	// dstFile, err := os.Create(baseFilename)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer dstFile.Close()
 
-        if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-            panic(err)
-        }
+	dstBuffer := new(bytes.Buffer)
 
-        dstFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-        if err != nil {
-            panic(err)
-        }
+	// Concatenate the split files into a single file
+	for _, zipFile := range zipFiles {
+		srcFile, err := os.Open(zipFile)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
 
-        fileInArchive, err := f.Open()
-        if err != nil {
-            panic(err)
-        }
+		_, err = io.Copy(dstBuffer, srcFile)
+		if err != nil {
+			return err
+		}
+	}
 
-        if _, err := io.Copy(dstFile, fileInArchive); err != nil {
-            panic(err)
-        }
+	zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
+	if err != nil {
+		return err
+	}
 
-        dstFile.Close()
-        fileInArchive.Close()
-    }
+	// Extract the contents of the ZIP archive
+	for _, file := range zipReader.File {
+		err := extractFile(file)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("Unzipping complete.")
+	return nil
+}
+
+func extractFile(file *zip.File) error {
+	// Open the file from the ZIP archive
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Create the destination file
+	dstPath := filepath.Join(".", file.Name)
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy the file contents to the destination file
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
