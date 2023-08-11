@@ -40,11 +40,18 @@ func UnzipSplitFiles(filename string) error {
 		}
 		defer srcFile.Close()
 
-		_, err = io.Copy(dstBuffer, srcFile)
+		_, err = io.Copy( /*dstFile*/ dstBuffer, srcFile)
 		if err != nil {
 			return err
 		}
 	}
+
+	// // Open the concatenated file
+	// zipReader, err := zip.OpenReader(baseFilename)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer zipReader.Close()
 
 	zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
 	if err != nil {
