@@ -18,14 +18,12 @@
       .then(result => {
           go.run(result.instance);
 
-          var midiData = UnzipSplitFilesGo(...uint8ArrayList);
-          if (!midiData || midiData.length == 0) {
+          var data = UnzipSplitFilesGo(...uint8ArrayList);
+          if (!data || data.length == 0) {
               throw "Fail to convert this file";
           }
 
-          const a = URL.createObjectURL(new Blob([midiData[0]]));
-          
-          debugger;
+          const a = URL.createObjectURL(new Blob([data[0]]));
           
           const link = document.createElement('a');
           link.href = a;
@@ -62,28 +60,31 @@
 
     const inputElement = document.getElementById("input");
     inputElement.addEventListener("change", function () {
-      const fileList = this.files;
+      const fileList = Array.from(this.files);
+      
+      const ok = fileList.every(a => new RegExp("\\.zip\\.\\d+$").test(a.name));
 
-      var promiseList = [];
-      for (const file of fileList) {
-        promiseList.push(((f) => new Promise((res) => {
+      if (ok && fileList.length > 1) {
+        fileList.sort((a, b) => {
+          const nthRegex = new RegExp("\\.zip\\.(\\d+)$");
+          return Number(a.name.match(nthRegex)[1]) - Number(b.name.match(nthRegex)[1]);
+        });
+      }
+      
+      const promiseList = fileList.map(file => {
+        return new Promise((res) => {
           const reader = new FileReader();
           reader.onload = (event) => {
-            // convert(new Uint8Array(event.target.result))
-            // .then(converted => download(converted, file.name.substr(0, file.name.lastIndexOf(".")) + ".mid"))
-            // .catch(err => alert(err));
             res(new Uint8Array(event.target.result));
           }
-          reader.readAsArrayBuffer(f)
-        }))(file));
-      }
+          reader.readAsArrayBuffer(file);
+        });
+      });
 
       Promise.all(promiseList).then(uint8ArrayList => {
         convert(uint8ArrayList);
       })
     }, false);
-
   </script>
 </body>
-
 </html>
