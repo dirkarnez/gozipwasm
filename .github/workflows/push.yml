@@ -1,9 +1,6 @@
 name: golang-build-actions-workflow
 on:
   push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
@@ -33,6 +30,11 @@ jobs:
       
       - run: copy "%GOROOT%\misc\wasm\wasm_exec.js" build-webassembly\
         shell: cmd
+
+      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+        with:
+          add: 'build-webassembly'
+          message: '- from automatic build'
     
       - name: Archive Release (webassembly)
         uses: thedoctor0/zip-release@master
