@@ -1,7 +1,6 @@
 {
     "recommendations": [
         "ms-vscode.cpptools",
-        "golang.go",
         "ms-vscode.cpptools-themes",
         "ms-vscode.cpptools-extension-pack"
     ]
