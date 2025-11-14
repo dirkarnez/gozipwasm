@@ -8,17 +8,18 @@ package main
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 
 	"github.com/dirkarnez/gozipwasm/unzip"
 
 	"syscall/js"
 )
 
-func UnzipSplitFiles_JavaScript(this js.Value, args []js.Value) interface{} {
+func UnzipSplittedFiles_JavaScript(this js.Value, args []js.Value) interface{} {
 	dstBuffer := new(bytes.Buffer)
 
-	for _, arg := range args {
+	password := args[0].String()
+
+	for _, arg := range args[1:] {
 		buffer := make([]byte, arg.Length())
 		js.CopyBytesToGo(buffer, arg)
 
@@ -28,7 +29,7 @@ func UnzipSplitFiles_JavaScript(this js.Value, args []js.Value) interface{} {
 		}
 	}
 
-	files, err := unzip.UnzipSplitFiles(dstBuffer.Bytes())
+	files, err := unzip.UnzipSplittedFiles(password, dstBuffer.Bytes())
 	if err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func UnzipSplitFiles_JavaScript(this js.Value, args []js.Value) interface{} {
 		defer zippedFile.Close()
 
 		// Read the contents of the file into a []byte slice
-		fileBytes, err := ioutil.ReadAll(zippedFile)
+		fileBytes, err := io.ReadAll(zippedFile)
 		if err != nil {
 			return err
 		}
@@ -66,6 +67,6 @@ func UnzipSplitFiles_JavaScript(this js.Value, args []js.Value) interface{} {
 }
 
 func main() {
-	js.Global().Set("UnzipSplitFilesGo", js.FuncOf(UnzipSplitFiles_JavaScript))
+	js.Global().Set("UnzipSplittedFilesGo", js.FuncOf(UnzipSplittedFiles_JavaScript))
 	select {} // block the main thread forever
 }

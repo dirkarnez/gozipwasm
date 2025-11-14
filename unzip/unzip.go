@@ -3,21 +3,32 @@ package unzip
 import (
 	"archive/zip"
 	"bytes"
+	"strings"
 
 	yekaZip "github.com/yeka/zip"
 )
 
-// f.SetPassword("12345")
-func UnzipSplitFilesWithPassword(byteArray []byte) ([]*yekaZip.File, error) {
+func UnzipSplittedFilesWithPassword(password string, byteArray []byte) ([]*yekaZip.File, error) {
 	r, err := yekaZip.NewReader(bytes.NewReader(byteArray), int64(len(byteArray)))
 	if err != nil {
 		return nil, err
 	}
 
+	// f.SetPassword("12345")
+	// r.File[0].SetPassword()
+
 	return r.File, nil
 }
 
-func UnzipSplitFiles(byteArray []byte) ([]*zip.File, error) {
+func UnzipSplittedFiles(password string, byteArray []byte) ([]*zip.File, error) {
+	if len(strings.TrimSpace(password)) > 0 {
+		// return UnzipSplittedFilesWithPassword(password, byteArray)
+	} else {
+		zipReader, err := zip.NewReader(bytes.NewReader(byteArray), int64(len(byteArray)))
+		if err != nil {
+			return nil, err
+		}
+	}
 	// Create a new file to write the concatenated content
 	// dstFile, err := os.Create(baseFilename)
 	// if err != nil {
@@ -31,11 +42,6 @@ func UnzipSplitFiles(byteArray []byte) ([]*zip.File, error) {
 	// 	return err
 	// }
 	// defer zipReader.Close()
-
-	zipReader, err := zip.NewReader(bytes.NewReader(byteArray), int64(len(byteArray)))
-	if err != nil {
-		return nil, err
-	}
 
 	return zipReader.File, nil
 }

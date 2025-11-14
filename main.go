@@ -13,18 +13,18 @@ import (
 
 func main() {
 	// if len(os.Args) == 2 {
-	// 	err := UnzipSplitFiles_Desktop(os.Args[1:2][0])
+	// 	err := UnzipSplittedFiles_Desktop(os.Args[1:2][0])
 	// 	if err != nil {
 	// 		fmt.Println("Error unzipping files:", err)
 	// 	}
 	// } else {
 	// 	log.Fatal("please drag a file with extension .zip.001")
 	// }
-	UnzipSplitFilesWithPassword_Desktop("Downloads.zip.001", "123")
+	UnzipSplittedFilesWithPassword_Desktop("Downloads.zip.001", "123")
 
 }
 
-func UnzipSplitFiles_Desktop(filename string) error {
+func UnzipSplittedFiles_Desktop(filename string) error {
 	baseFilename := filename[:len(filename)-8] // Remove the ".zip.001" extension
 	zipFiles, err := filepath.Glob(baseFilename + ".zip.*")
 	if err != nil {
@@ -47,7 +47,7 @@ func UnzipSplitFiles_Desktop(filename string) error {
 	}
 
 	//zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
-	files, err := unzip.UnzipSplitFiles(dstBuffer.Bytes())
+	files, err := unzip.UnzipSplittedFiles(dstBuffer.Bytes())
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func UnzipSplitFiles_Desktop(filename string) error {
 	return nil
 }
 
-func UnzipSplitFilesWithPassword_Desktop(filename string, password string) error {
+func UnzipSplittedFilesWithPassword_Desktop(filename string, password string) error {
 	baseFilename := filename[:len(filename)-8] // Remove the ".zip.001" extension
 	zipFiles, err := filepath.Glob(baseFilename + ".zip.*")
 	if err != nil {
@@ -87,7 +87,7 @@ func UnzipSplitFilesWithPassword_Desktop(filename string, password string) error
 	}
 
 	//zipReader, err := zip.NewReader(bytes.NewReader(dstBuffer.Bytes()), int64(dstBuffer.Len()))
-	files, err := unzip.UnzipSplitFilesWithPassword(dstBuffer.Bytes())
+	files, err := unzip.UnzipSplittedFilesWithPassword(dstBuffer.Bytes())
 	if err != nil {
 		return err
 	}

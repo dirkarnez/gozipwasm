@@ -9,16 +9,17 @@
 
 <body>    
   <script src="wasm_exec.js"></script>
-  <input type="file" id="input" multiple>
+  <input type="file" id="files-input" multiple>
+  <input type="password" id="password-input">
   <script>
-    function convert(uint8ArrayList) {
+    function convert(password, uint8ArrayList) {
       const go = new Go();
       return WebAssembly
       .instantiateStreaming(fetch("main.wasm"), go.importObject)
       .then(result => {
           go.run(result.instance);
-
-          var data = UnzipSplitFilesGo(...uint8ArrayList);
+          
+          const data = UnzipSplittedFilesGo(password, ...uint8ArrayList);
           if (!data || data.length == 0) {
               throw "Fail to convert this file";
           }
@@ -44,7 +45,6 @@
 
           // Remove link from body
           document.body.removeChild(link);
-
           return a;
       });
     }
@@ -58,20 +58,22 @@
       document.body.removeChild(a);
     }
 
-    const inputElement = document.getElementById("input");
-    inputElement.addEventListener("change", function () {
-      const fileList = Array.from(this.files);
-      
-      const ok = fileList.every(a => new RegExp("\\.zip\\.\\d+$").test(a.name));
+    const fileInputElement = document.getElementById("files-input");
+    fileInputElement.addEventListener("change", function () {
+      const fileList = Array
+        .from(this.files);
 
-      if (ok && fileList.length > 1) {
+      const ok = fileList
+        .every(a => new RegExp("\\.zip\\.\\d+$").test(a.name));
+
+      if (ok && fileList.length > 0) {
         fileList.sort((a, b) => {
           const nthRegex = new RegExp("\\.zip\\.(\\d+)$");
           return Number(a.name.match(nthRegex)[1]) - Number(b.name.match(nthRegex)[1]);
         });
       }
-      
-      const promiseList = fileList.map(file => {
+
+      Promise.all(fileList.map(file => {
         return new Promise((res) => {
           const reader = new FileReader();
           reader.onload = (event) => {
@@ -79,10 +81,9 @@
           }
           reader.readAsArrayBuffer(file);
         });
-      });
-
-      Promise.all(promiseList).then(uint8ArrayList => {
-        convert(uint8ArrayList);
+      }))
+      .then(uint8ArrayList => {
+        convert(document.getElementById("password-input").value, uint8ArrayList);
       })
     }, false);
   </script>
