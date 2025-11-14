@@ -13,7 +13,6 @@ echo %PATH%
 
 set GOOS=windows
 set GOARCH=amd64
-go get github.com/yeka/zip
 go build
 
 @REM SET GOOS=js
